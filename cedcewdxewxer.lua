@@ -4663,7 +4663,7 @@ specTitle.Parent = specFrame
 
 local specList = Instance.new("TextLabel")
 specList.Size = UDim2.new(1, -10, 1, -20)
-specList.Position = UDim2.new(0, 5, 0, 20)
+specList.Position = UDim2.new(0, -15, 0, 20)
 specList.BackgroundTransparency = 1
 specList.TextColor3 = Color3.new(1, 1, 1)
 specList.Font = Enum.Font.SourceSans
