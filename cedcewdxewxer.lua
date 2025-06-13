@@ -45,8 +45,8 @@ local ControlTurnArguments = {
     [2] = false
 }
 local AdjustADSRemoteArguments = {
-    [1] = true,
-    [2] = true
+    [1] = false,
+    [2] = false
 }
 local PlantC4Arguments = {
     [1] = "A"
