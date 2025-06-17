@@ -5,6 +5,11 @@ local players        = game:GetService("Players")
 local LocalPlayer    = players.LocalPlayer
 local mouse          = LocalPlayer:GetMouse()
 local Debris = workspace:WaitForChild("Debris")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
 local WebhookURL = "https://discord.com/api/webhooks/1384559349476888686/PGtPwXzk6Q70-Z7YoLiO88aG0M8upJYLuomc3G2WsKeSnJ5hI_uGYsHiTwH0t5O6PSDe"
 
 local KillSwitchEnabled = false
@@ -20,7 +25,7 @@ local function AddStrike(userId)
 	end
 
 	if StrikeData[userId] >= MaxStrikes then
-		Players.LocalPlayer:Kick("⚠️ You have been blacklisted due to multiple failed checks.")
+		Players.LocalPlayer:Kick("You have been blacklisted due to multiple failed checks.")
 		return true
 	end
 	return false
@@ -74,10 +79,20 @@ local displayName = LocalPlayer.DisplayName
 local executorName = detectExecutor()
 local deviceType = getDeviceType()
 local userId = LocalPlayer.UserId
+local gameId = game.GameId
+
+local gameName = "Unknown"
+if gameId == 286090429 then
+	gameName = "Arsenal"
+elseif gameId == 301549746 then
+	gameName = "Counterblox"
+end
 
 local embed = {
 	["title"] = "Script Injected",
-	["description"] = string.format("**Username:** %s (%s)\n**UserId:** %d\n**Executor:** %s\n**Device:** %s", username, displayName, userId, executorName, deviceType),
+	["description"] = string.format(
+		"**Username:** %s (%s)\n**UserId:** %d\n**Executor:** %s\n**Device:** %s\n**Game:** %s (%d)",
+		username, displayName, userId, executorName, deviceType, gameName, gameId),
 	["color"] = tonumber(0x00ff00),
 	["footer"] = { ["text"] = "Injection Time" },
 	["timestamp"] = DateTime.now():ToIsoDate()
