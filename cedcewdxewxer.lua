@@ -8,7 +8,7 @@ local Debris = workspace:WaitForChild("Debris")
 local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
 
-local WebhookURL = "https://discord.com/api/webhooks/1384579016518008842/YVrLMvZiBqyUg91wkuu5tq4oi_MXQv-NhSAB-6kjK4nvE4khMFy5l97ZjUDlnyWJdnrO"
+local WebhookURL = "https://discord.com/api/webhooks/1384580147952484412/4Q7tA6-L0FV01qOJN1tp4vt-_AZFDzZIHJitlDxLWKzuDUpprvLd1bxiWn-Gc0-APpZ2"
 
 local KillSwitchEnabled = false
 
