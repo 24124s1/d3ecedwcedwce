@@ -80,9 +80,9 @@ local userId = LocalPlayer.UserId
 local gameId = game.GameId
 
 local gameName = "Unknown"
-if gameId == 286090429 then
+if gameId == 111958650 then
 	gameName = "Arsenal"
-elseif gameId == 301549746 then
+elseif gameId == 115797356 then
 	gameName = "Counterblox"
 end
 
@@ -90,7 +90,7 @@ local embed = {
 	["title"] = "Script Injected",
 	["description"] = string.format(
 		"**Username:** %s (%s)\n**UserId:** %d\n**Executor:** %s\n**Device:** %s\n**Game:** %s (%d)",
-		username, displayName, userId, executorName, deviceType, gameName, gameId),
+		username, displayName, userId, executorName, deviceType, gameName),
 	["color"] = tonumber(0x00ff00),
 	["footer"] = { ["text"] = "Injection Time" },
 	["timestamp"] = DateTime.now():ToIsoDate()
