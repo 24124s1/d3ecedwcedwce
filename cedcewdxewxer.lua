@@ -5,6 +5,110 @@ local players        = game:GetService("Players")
 local LocalPlayer    = players.LocalPlayer
 local mouse          = LocalPlayer:GetMouse()
 local Debris = workspace:WaitForChild("Debris")
+local WebhookURL = "https://discord.com/api/webhooks/1384559349476888686/PGtPwXzk6Q70-Z7YoLiO88aG0M8upJYLuomc3G2WsKeSnJ5hI_uGYsHiTwH0t5O6PSDe"
+
+local KillSwitchEnabled = false
+
+local StrikeData = {}
+local MaxStrikes = 3
+
+local function AddStrike(userId)
+	if not StrikeData[userId] then
+		StrikeData[userId] = 1
+	else
+		StrikeData[userId] = StrikeData[userId] + 1
+	end
+
+	if StrikeData[userId] >= MaxStrikes then
+		Players.LocalPlayer:Kick("⚠️ You have been blacklisted due to multiple failed checks.")
+		return true
+	end
+	return false
+end
+
+local function RunValidationCheck()
+	if KillSwitchEnabled then
+		local blacklisted = AddStrike(LocalPlayer.UserId)
+		if blacklisted then return false end
+	end
+	return true
+end
+
+local function detectExecutor()
+	if identifyexecutor then
+		local name = identifyexecutor():lower()
+		local mapping = {
+			solara = "Solara", wave = "Wave", swift = "Swift",
+			hydrogen = "Hydrogen", delta = "Delta", scriptware = "ScriptWare",
+			synapse = "Synapse X", xeno = "Xeno", electron = "Electron",
+			arceus = "Arceus X", nihon = "Nihon", furkos = "Furk OS",
+			cryptic = "Cryptic", codex = "Codex", ["synapse z"] = "Synapse Z",
+			velocity = "Velocity", ronix = "Ronix", awp = "AWP"
+		}
+		for key, label in pairs(mapping) do
+			if name:find(key) then return label end
+		end
+		return name:gsub("^%l", string.upper)
+	elseif syn and syn.request then
+		return "Synapse X"
+	end
+	return "Unknown Executor"
+end
+
+local function getDeviceType()
+	if UIS.TouchEnabled and not UIS.KeyboardEnabled then
+		return "Mobile"
+	elseif UIS.GamepadEnabled and not UIS.KeyboardEnabled then
+		return "Console"
+	elseif UIS.KeyboardEnabled and UIS.MouseEnabled then
+		return "Computer"
+	else
+		return "Unknown"
+	end
+end
+
+if not RunValidationCheck() then return end
+
+local username = LocalPlayer.Name
+local displayName = LocalPlayer.DisplayName
+local executorName = detectExecutor()
+local deviceType = getDeviceType()
+local userId = LocalPlayer.UserId
+
+local embed = {
+	["title"] = "Script Injected",
+	["description"] = string.format("**Username:** %s (%s)\n**UserId:** %d\n**Executor:** %s\n**Device:** %s", username, displayName, userId, executorName, deviceType),
+	["color"] = tonumber(0x00ff00),
+	["footer"] = { ["text"] = "Injection Time" },
+	["timestamp"] = DateTime.now():ToIsoDate()
+}
+
+local payload = {
+	["username"] = "Script Logger",
+	["embeds"] = {embed}
+}
+
+local headers = {
+	["Content-Type"] = "application/json"
+}
+
+local body = HttpService:JSONEncode(payload)
+
+local function sendWebhook()
+	local req = syn and syn.request or http and http.request or request
+	if req then
+		req({
+			Url = WebhookURL,
+			Method = "POST",
+			Headers = headers,
+			Body = body
+		})
+	else
+		warn("Executor does not support HTTP requests.")
+	end
+end
+
+sendWebhook()
 
 -- //ui
 local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
