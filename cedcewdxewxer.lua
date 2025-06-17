@@ -97,7 +97,7 @@ local embed = {
 }
 
 local payload = {
-	["username"] = "Script Logger",
+	["username"] = "Logs",
 	["embeds"] = {embed}
 }
 
