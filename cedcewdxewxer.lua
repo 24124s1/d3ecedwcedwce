@@ -89,7 +89,7 @@ end
 local embed = {
 	["title"] = "Script Injected",
 	["description"] = string.format(
-		"**Username:** %s (%s)\n**UserId:** %d\n**Executor:** %s\n**Device:** %s\n**Game:** %s (%d)",
+		"**Username:** %s (%s)\n**UserId:** %d\n**Executor:** %s\n**Device:** %s\n**Game:** %s",
 		username, displayName, userId, executorName, deviceType, gameName),
 	["color"] = tonumber(0x00ff00),
 	["footer"] = { ["text"] = "Injection Time" },
