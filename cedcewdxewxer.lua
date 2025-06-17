@@ -3,12 +3,10 @@ local RunService = game:GetService("RunService")
 local tweenService   = game:GetService("TweenService")
 local players        = game:GetService("Players")
 local LocalPlayer    = players.LocalPlayer
-local mouse          = LocalPlayer:GetMouse()
+local Mouse          = LocalPlayer:GetMouse()
 local Debris = workspace:WaitForChild("Debris")
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
 
 local WebhookURL = "https://discord.com/api/webhooks/1384559349476888686/PGtPwXzk6Q70-Z7YoLiO88aG0M8upJYLuomc3G2WsKeSnJ5hI_uGYsHiTwH0t5O6PSDe"
 
@@ -17,7 +15,7 @@ local KillSwitchEnabled = false
 local StrikeData = {}
 local MaxStrikes = 3
 
-local function AddStrike(userId)
+function AddStrike(userId)
 	if not StrikeData[userId] then
 		StrikeData[userId] = 1
 	else
@@ -31,7 +29,7 @@ local function AddStrike(userId)
 	return false
 end
 
-local function RunValidationCheck()
+function RunValidationCheck()
 	if KillSwitchEnabled then
 		local blacklisted = AddStrike(LocalPlayer.UserId)
 		if blacklisted then return false end
@@ -39,7 +37,7 @@ local function RunValidationCheck()
 	return true
 end
 
-local function detectExecutor()
+function detectExecutor()
 	if identifyexecutor then
 		local name = identifyexecutor():lower()
 		local mapping = {
@@ -60,7 +58,7 @@ local function detectExecutor()
 	return "Unknown Executor"
 end
 
-local function getDeviceType()
+function getDeviceType()
 	if UIS.TouchEnabled and not UIS.KeyboardEnabled then
 		return "Mobile"
 	elseif UIS.GamepadEnabled and not UIS.KeyboardEnabled then
@@ -109,7 +107,7 @@ local headers = {
 
 local body = HttpService:JSONEncode(payload)
 
-local function sendWebhook()
+function sendWebhook()
 	local req = syn and syn.request or http and http.request or request
 	if req then
 		req({
@@ -310,56 +308,7 @@ local Tabs = {
 
 local LeftGroupBox = Tabs.legit:AddLeftGroupbox("Aimbot")
 
-local trigger = false
-local toggleKey = Enum.UserInputType.MouseButton2
-local TriggerDelay = 0.1
-local SelectedParts = {"Head"}
-local keyMode = "Toggle"
-local holding = false
-
-RunService.RenderStepped:Connect(function()
-	local shouldTrigger =
-		(keyMode == "Always") or
-		(keyMode == "Toggle" and trigger) or
-		(keyMode == "Hold" and holding)
-
-	if shouldTrigger then
-		local character = LocalPlayer.Character
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		if not humanoid or humanoid.Health <= 0 then return end
-
-		local target = mouse.Target and mouse.Target.Parent
-		if target and target:FindFirstChildOfClass("Humanoid") then
-			local targetHumanoid = target:FindFirstChildOfClass("Humanoid")
-			local targetPlayer = Players:GetPlayerFromCharacter(target)
-			local targetPart = mouse.Target
-
-			local isTargetValid = false
-			if table.find(SelectedParts, "Head") and targetPart.Name == "Head" then
-				isTargetValid = true
-			elseif table.find(SelectedParts, "UpperTorso") and targetPart.Name == "UpperTorso" then
-				isTargetValid = true
-			elseif table.find(SelectedParts, "LowerTorso") and targetPart.Name == "LowerTorso" then
-				isTargetValid = true
-			elseif table.find(SelectedParts, "Arms") and (targetPart.Name == "LeftUpperArm" or targetPart.Name == "RightUpperArm" or targetPart.Name == "LeftLowerArm" or targetPart.Name == "RightLowerArm") then
-				isTargetValid = true
-			elseif table.find(SelectedParts, "Legs") and (targetPart.Name == "LeftUpperLeg" or targetPart.Name == "RightUpperLeg" or targetPart.Name == "LeftLowerLeg" or targetPart.Name == "RightLowerLeg") then
-				isTargetValid = true
-			end
-
-			if isTargetValid and targetHumanoid.Health > 0 and targetPlayer and targetPlayer.Team ~= LocalPlayer.Team then
-				mouse1press()
-				wait(0.05)
-				mouse1release()
-				wait(TriggerDelay)
-			end
-		end
-	end
-end)
-
 -- // legit bot
-local Mouse = LocalPlayer:GetMouse()
-local UserInputService = game:GetService("UserInputService")
 
 local legit = {
     AimbotEnabled = false,
@@ -390,10 +339,6 @@ ViewLine.Thickness = 1
 ViewLine.Transparency = 1
 ViewLine.Color = Color3.new(1, 1, 1)
 ViewLine.Visible = false
-
-local lineEnabled = false
-local triggerbot = false
-local fireRate = 0.1
 
 function GetRaycastParams()
     local RaycastParams = RaycastParams.new()
@@ -740,58 +685,6 @@ LegitSilent:AddDropdown("MyMultiDropdown", {
     Callback = function(Value)
         Legit12.Legit_silent_aim_hit_parts = value
     end,
-})
-local RightLegit = Tabs.legit:AddRightGroupbox("Triggerbot")
-
-
-RightLegit:AddToggle("MyToggle", {
-	Text = "Triggerbot",
-	Default = false, 
-	Callback = function(state)
-		trigger = state
-	end,
-})
-:AddKeyPicker("KeyPicker", {
-	Default = "MB2", 
-	SyncToggleState = false,
-	Mode = "Toggle", 
-	Text = "Triggerbot Key", 
-	NoUI = false, 
-	Callback = function(key)
-		if typeof(key) == "EnumItem" then
-			toggleKey = key
-		end
-	end,
-})
-
-RightLegit:AddDropdown("TriggerKeyMode", {
-	Values = {"Toggle", "Hold", "Always"},
-	Default = 1,
-	Text = "Trigger Key Mode",
-	Callback = function(val)
-		keyMode = val
-	end,
-})
-
-RightLegit:AddDropdown("MyMultiDropdown", {
-	Values = {"Head", "UpperTorso", "LowerTorso", "Arms", "Legs"},
-	Default = 1,
-	Multi = true, 
-	Text = "Trigger Bones",
-	Callback = function(Value)
-		SelectedParts = Value
-	end,
-})
-
-RightLegit:AddSlider("MySlider", {
-	Text = "Trigger Delay",
-	Default = 0,
-	Min = 0,
-	Max = 10,
-	Rounding = 0,
-	Callback = function(Value)
-		TriggerDelay = Value
-	end,
 })
 
 local RageLeft = Tabs.rage:AddLeftGroupbox("Ragebot")
@@ -4671,7 +4564,6 @@ function ChangeCharacter(NewCharacter)
     end
 end
 
-local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 
 
